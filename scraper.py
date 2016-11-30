@@ -85,7 +85,7 @@ def convert_mth_strings ( mth_string ):
 #### VARIABLES 1.0
 
 entity_id = "NFTRXH_BSUHNFT_gov"
-urls = "https://www.bsuh.nhs.uk/about-us/trust-reports-and-policies/trust-transaction-data/?p={}"
+urls = "https://www.bsuh.nhs.uk/about-us/spending/?p={}"
 errors = 0
 data = []
 url = 'http://www.example.com'
