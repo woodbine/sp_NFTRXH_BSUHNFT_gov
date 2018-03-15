@@ -37,12 +37,15 @@ def validateFilename(filename):
 
 def validateURL(url):
     try:
-        r = urllib2.urlopen(url)
+        headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; WOW64; rv:40.0) Gecko/20100101 Firefox/40.0"}
+        request = urllib2.Request(url, headers=headers)
+        r = urllib2.urlopen(request)
         count = 1
         while r.getcode() == 500 and count < 4:
             print ("Attempt {0} - Status code: {1}. Retrying.".format(count, r.status_code))
             count += 1
-            r = urllib2.urlopen(url)
+            request = urllib2.Request(url, headers=headers)
+            r = urllib2.urlopen(request)
         sourceFilename = r.headers.get('Content-Disposition')
 
         if sourceFilename:
@@ -85,51 +88,32 @@ def convert_mth_strings ( mth_string ):
 #### VARIABLES 1.0
 
 entity_id = "NFTRXH_BSUHNFT_gov"
-urls = "https://www.bsuh.nhs.uk/about-us/spending/?p={}"
+url = "https://www.bsuh.nhs.uk/about-us/our-spending/expenditure-over-25000"
 errors = 0
 data = []
-url = 'http://www.example.com'
+headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; WOW64; rv:40.0) Gecko/20100101 Firefox/40.0"}
 
 #### READ HTML 1.0
 
-
-html = urllib2.urlopen(url)
-soup = BeautifulSoup(html, 'lxml')
+request = urllib2.Request(url, headers=headers)
+contents = urllib2.urlopen(request).read()
+soup = BeautifulSoup(contents, 'lxml')
 
 
 #### SCRAPE DATA
 
-import itertools
-
-for i in itertools.count():
-    html = urllib2.urlopen(urls.format(i+1))
-    soup = BeautifulSoup(html, 'lxml')
-    links = soup.find_all('a')
-    error = soup.find('div', 'content clearfix').text
-    if 'Sorry, no items were found' in error:
-        break
-    for link in links:
-        if '=Attachment' in link['href']:
-            url = 'https://www.bsuh.nhs.uk'+link['href']
-            title = link['title'].split('-')[-1].strip()
-            csvMth = title[:3]
-            csvYr = title[-4:]
-            if 'part' in title:
-                continue
-            if '-' not in link['title']:
-                title = link['title'].split(' ')[1].strip()
-                csvYr = title[-4:]
-            if 'Tra' in csvMth:
-                csvYr = '2011'
-                csvMth = '08'
-            if 'Tru' in csvMth:
-                csvYr = '2011'
-                csvMth = '09'
-            if 'Transaction data March 2014' in title:
-                csvMth = '03'
-                csvYr = '2014'
+links = soup.find_all('a')
+for link in links:
+    try:
+        if '.csv' in link['href']:
+            url = link['href']
+            title = link.text.strip().split()
+            csvMth = title[-2][:3]
+            csvYr = title[-1][-4:]
             csvMth = convert_mth_strings(csvMth.upper())
             data.append([csvYr, csvMth, url])
+    except:
+        pass
 
 #### STORE DATA 1.0
 
